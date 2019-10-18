@@ -31,6 +31,17 @@ class PongView(object):
         except:
             self.scoreFont = pygame.font.Font(pygame.font.get_default_font(), 150)
 
+    def get_ball_bb(self):
+        """
+        Get the bounding box of the ball
+        """
+        left = self.bar_t + self.bat_thickness
+        top = self.bar_t
+        width = self.width - 2*(self.bar_t + self.bat_thickness)
+        height = self.height - 2*self.bar_t
+        
+        return pygame.Rect(left, top, width, height)
+
     def update(self, gameStateDict=None):
         """
         Update the view with the current game state.
@@ -42,6 +53,9 @@ class PongView(object):
         border_rect = Rect(0, 0, self.width, self.height)
         pygame.draw.rect(self.SCREEN, self.LINECOLOR, 
                          border_rect, self.bar_t)
+
+        pygame.draw.rect(self.SCREEN, self.LINECOLOR, 
+                         self.get_ball_bb(), 1)
 
         # Draw the center line.
         pygame.draw.line(self.SCREEN, self.CENTERLINECOLOR,
@@ -62,14 +76,21 @@ class PongView(object):
         self.SCREEN.blit(player2_score, player2_score_pos)
 
         # Draw the bats
+        b1_pos = gameStateDict['bat1']
+        b2_pos = gameStateDict['bat2']
         pygame.draw.line(self.SCREEN, self.LINECOLOR, 
-                         (self.bar_t*1.8, 5), 
-                         (self.bar_t*1.8, 5+self.bat_length),
+                         (self.bar_t*1.8, self.bar_t + b1_pos), 
+                         (self.bar_t*1.8, self.bar_t + b1_pos + self.bat_length),
                          self.bat_thickness)
         pygame.draw.line(self.SCREEN, self.LINECOLOR, 
-                         (self.width-self.bar_t-self.bat_thickness/2, 5), 
-                         (self.width-self.bar_t-self.bat_thickness/2, 5+self.bat_length),
+                         (self.width-self.bar_t-self.bat_thickness/2, self.bar_t + b2_pos), 
+                         (self.width-self.bar_t-self.bat_thickness/2, self.bar_t + b2_pos + self.bat_length),
                          self.bat_thickness)
+
+        # Draw the ball
+        ball_pos = gameStateDict['ball']
+        pygame.draw.circle(self.SCREEN, self.LINECOLOR,
+                           ball_pos, 8)
 
         # Update
         pygame.display.update()
