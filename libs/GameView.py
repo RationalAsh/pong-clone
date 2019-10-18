@@ -8,9 +8,6 @@ class PongView(object):
     def __init__(self):
         # Initialize pygame
         pygame.init()
-        # Initialize fonts
-        pygame.font.init()
-        self.scoreFont = pygame.font.Font('assets/fonts/digital-7.regular.ttf', 32)
 
         self.SCREEN = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.BACKGROUND = (0, 0, 0)
@@ -22,7 +19,13 @@ class PongView(object):
         self.width = self.info.current_w
         self.height = self.info.current_h
         self.bar_t = int(self.height*0.005)
+        self.bat_length = int(self.height*0.05)
+        self.bat_thickness = int(self.width*0.005)
         print(self.info.current_h, self.info.current_w)
+
+        # Initialize fonts
+        pygame.font.init()
+        self.scoreFont = pygame.font.Font('assets/fonts/digital-7.regular.ttf', 180)
 
     def update(self, gameStateDict=None):
         """
@@ -44,16 +47,28 @@ class PongView(object):
         # Draw the scores for each player.
         player1_score = self.scoreFont.render('0', True, self.LINECOLOR, self.BACKGROUND)
         player1_score_pos = player1_score.get_rect()
-        player1_score_pos.center = (self.width*0.4, self.height*0.015)
+        player1_score_pos.center = (self.width*0.48 - player1_score_pos.width/2, 
+                                    self.height*0.015 + player1_score_pos.height/2)
         player2_score = self.scoreFont.render('0', True, self.LINECOLOR, self.BACKGROUND)
         player2_score_pos = player2_score.get_rect()
-        player2_score_pos.center = (self.width*0.6, self.height*0.015)
+        player2_score_pos.center = (self.width*0.52 + player1_score_pos.width/2, 
+                                    self.height*0.015 + player2_score_pos.height/2)
         
         self.SCREEN.blit(player1_score, player1_score_pos)
         self.SCREEN.blit(player2_score, player2_score_pos)
 
+        # Draw the bats
+        pygame.draw.line(self.SCREEN, self.LINECOLOR, 
+                         (self.bar_t*1.8, 5), 
+                         (self.bar_t*1.8, 5+self.bat_length),
+                         self.bat_thickness)
+        pygame.draw.line(self.SCREEN, self.LINECOLOR, 
+                         (self.width-self.bar_t-self.bat_thickness/2, 5), 
+                         (self.width-self.bar_t-self.bat_thickness/2, 5+self.bat_length),
+                         self.bat_thickness)
+                         
         # Update
-        pygame.display.flip()
+        pygame.display.update()
 
     def exitGame(self):
         pygame.quit()
