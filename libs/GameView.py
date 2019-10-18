@@ -13,6 +13,7 @@ class PongView(object):
         self.BACKGROUND = (0, 0, 0)
         self.LINECOLOR = (255, 255, 255)
         self.CENTERLINECOLOR = (255, 255, 255, 128)
+        self.FONTCOLOR = (245, 245, 245, 1)
 
         # Print the window size
         self.info = pygame.display.Info()
@@ -25,7 +26,10 @@ class PongView(object):
 
         # Initialize fonts
         pygame.font.init()
-        self.scoreFont = pygame.font.Font('assets/fonts/digital-7.regular.ttf', 180)
+        try:
+            self.scoreFont = pygame.font.Font('assets/fonts/digital-7.regular.ttf', 150)
+        except:
+            self.scoreFont = pygame.font.Font(pygame.font.get_default_font(), 150)
 
     def update(self, gameStateDict=None):
         """
@@ -45,11 +49,11 @@ class PongView(object):
                          self.bar_t)
 
         # Draw the scores for each player.
-        player1_score = self.scoreFont.render('0', True, self.LINECOLOR, self.BACKGROUND)
+        player1_score = self.scoreFont.render('0', True, self.FONTCOLOR, self.BACKGROUND)
         player1_score_pos = player1_score.get_rect()
         player1_score_pos.center = (self.width*0.48 - player1_score_pos.width/2, 
                                     self.height*0.015 + player1_score_pos.height/2)
-        player2_score = self.scoreFont.render('0', True, self.LINECOLOR, self.BACKGROUND)
+        player2_score = self.scoreFont.render('0', True, self.FONTCOLOR, self.BACKGROUND)
         player2_score_pos = player2_score.get_rect()
         player2_score_pos.center = (self.width*0.52 + player1_score_pos.width/2, 
                                     self.height*0.015 + player2_score_pos.height/2)
@@ -66,7 +70,7 @@ class PongView(object):
                          (self.width-self.bar_t-self.bat_thickness/2, 5), 
                          (self.width-self.bar_t-self.bat_thickness/2, 5+self.bat_length),
                          self.bat_thickness)
-                         
+
         # Update
         pygame.display.update()
 
