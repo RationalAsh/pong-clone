@@ -202,6 +202,9 @@ class GameModel(object):
             #self.reset_positions()
             self.reset_ball()
 
+            # Update the speed
+            self.min_vel += self.min_vel*(self.score1 + self.score2)*0.5*0.005
+
             if self.score1 == 11 or self.score2 == 11:
                 self.state = self.STATE_OVER
             else:
