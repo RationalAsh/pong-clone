@@ -31,6 +31,18 @@ class Ball(object):
         self.vx, self.vy = ball_vel
         self.ball_radius = ball_radius
         self.min_vel = min_vel
+        self.ball_state = 1
+
+    def reset(self, starting_pos=(50, 50), ball_vel=(300.0, 0.0),
+              min_vel=300.0):
+        """
+        Reset the ball.
+        """
+        self.x, self.y = starting_pos
+        self.vx, self.vy = ball_vel
+        self.min_vel = min_vel
+        self.ball_state = 1
+
 
     def get_bounce_vel(self, hit_pos):
         """
@@ -67,31 +79,35 @@ class Ball(object):
         dt : float
             The delta t since the last update.
         """
-        #Check for collisions.
-        if (self.x <= self.bounding_box.left):
-            if (self.y >= b1_pos[0]) and (self.y <= b1_pos[0] + b1_pos[1]):
-                hit_pos = (self.y - b1_pos[0])/b1_pos[1]
-                self.vx, self.vy = self.get_bounce_vel(hit_pos)
-                self.bounding_box.left + 1
-                print(hit_pos)
-                print(self.vx, self.vy)
-            else:
-                self.vx = 0
-                self.vy = 0
-        elif (self.x >= self.bounding_box.right):
-            if (self.y >= b2_pos[0]) and (self.y <= b2_pos[0] + b2_pos[1]):
-                hit_pos = (self.y - b2_pos[0])/b2_pos[1]
-                self.vx, self.vy = self.get_bounce_vel(hit_pos)
-                self.vx = -self.vx
-                # self.vy = -self.vy
-                self.x = self.bounding_box.right-1
-                print(hit_pos)
-                print(self.vx, self.vy)
-            else:
-                self.vy = 0
-        elif (self.y >= self.bounding_box.bottom) or (self.y <= self.bounding_box.top):
-            self.vy = -self.vy
-            self.vx = self.vx*1.1
+        if self.ball_state == 1:
+            #Check for collisions.
+            if (self.x <= self.bounding_box.left):
+                if (self.y >= b1_pos[0]) and (self.y <= b1_pos[0] + b1_pos[1]):
+                    hit_pos = (self.y - b1_pos[0])/b1_pos[1]
+                    self.vx, self.vy = self.get_bounce_vel(hit_pos)
+                    self.bounding_box.left + 1
+                    print(hit_pos)
+                    print(self.vx, self.vy)
+                else:
+                    #self.vx = 0
+                    #self.vy = 0
+                    self.ball_state = 0
+            elif (self.x >= self.bounding_box.right):
+                if (self.y >= b2_pos[0]) and (self.y <= b2_pos[0] + b2_pos[1]):
+                    hit_pos = (self.y - b2_pos[0])/b2_pos[1]
+                    self.vx, self.vy = self.get_bounce_vel(hit_pos)
+                    self.vx = -self.vx
+                    # self.vy = -self.vy
+                    self.x = self.bounding_box.right-1
+                    print(hit_pos)
+                    print(self.vx, self.vy)
+                else:
+                    #self.vy = 0
+                    #self.vx = 0
+                    self.ball_state = 0
+            elif (self.y >= self.bounding_box.bottom) or (self.y <= self.bounding_box.top):
+                self.vy = -self.vy
+                self.vx = self.vx*1.1
 
         # Update the position of the ball
         self.x += self.vx*dt

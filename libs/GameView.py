@@ -63,11 +63,15 @@ class PongView(object):
                          self.bar_t)
 
         # Draw the scores for each player.
-        player1_score = self.scoreFont.render('0', True, self.FONTCOLOR, self.BACKGROUND)
+        player1_score = self.scoreFont.render(str(gameStateDict['p1_score']), 
+                                              True, self.FONTCOLOR,
+                                              self.BACKGROUND)
         player1_score_pos = player1_score.get_rect()
         player1_score_pos.center = (self.width*0.48 - player1_score_pos.width/2, 
                                     self.height*0.015 + player1_score_pos.height/2)
-        player2_score = self.scoreFont.render('0', True, self.FONTCOLOR, self.BACKGROUND)
+        player2_score = self.scoreFont.render(str(gameStateDict['p2_score']), 
+                                              True, self.FONTCOLOR, 
+                                              self.BACKGROUND)
         player2_score_pos = player2_score.get_rect()
         player2_score_pos.center = (self.width*0.52 + player1_score_pos.width/2, 
                                     self.height*0.015 + player2_score_pos.height/2)

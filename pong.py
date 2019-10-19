@@ -17,6 +17,9 @@ if __name__ == '__main__':
     p2_bat = Bat(max_pos=gameView.height-gameView.bar_t-gameView.bat_length)
     # Ball
     ball = Ball(bounding_box=gameView.get_ball_bb())
+    # Scores
+    p1_score = 0
+    p2_score = 0
 
     while True:
         # Controller
@@ -39,8 +42,19 @@ if __name__ == '__main__':
         ball.update(b1_pos=(my, gameView.bat_length),
                     b2_pos=(my, gameView.bat_length),
                     dt=1.0/FPS)
+
+        # Update the score
+        if ball.ball_state == 0:
+            # Score!
+            if ball.x > gameView.width//2:
+                p1_score += 1
+            else:
+                p2_score += 1
+            ball.reset()
+        
         gameStateDict = {'bat1': p1_bat.pos, 'bat2': p2_bat.pos,
-                         'ball': (int(ball.x), int(ball.y))}
+                         'ball': (int(ball.x), int(ball.y)),
+                         'p1_score': p1_score, 'p2_score': p2_score}
 
         gameView.update(gameStateDict=gameStateDict)
         dt = clock.tick(FPS)
