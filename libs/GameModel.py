@@ -22,7 +22,7 @@ class Bat(object):
     Bat Object
     """
     def __init__(self, x, y, length, thickness):
-        self.rectangle = pygame.Rect(x, y, thickness, length)
+        self.rect = pygame.Rect(x, y, thickness, length)
 
 class GameModel(object):
     def __init__(self, width, height):
@@ -68,6 +68,7 @@ class GameModel(object):
         self.event = None
         self.EVENT_HIT = 1
         self.EVENT_MISS = 2
+        self.EVENT_WALLBOUNCE = 3
 
         # States
         self.STATE_PREGAME = 1
@@ -98,5 +99,32 @@ class GameModel(object):
         self.state = self.STATE_PREGAME
 
     def step(self, p1y, p2y, dt):
-        
+        # Clear event flags
+        self.event = None
+
+        # Adjust the position of the bats from controller input
+        self.bat1.rect.centery = p1y
+        self.bat2.rect.centery = p2y
+
+        # Update the position of the ball
+        self.ball.step(dt)
+
+        # Check for collision or point
+        if self.ball.pos.x <= self.ball_border.left + self.ball_radius:
+            if self.ball.pos.y <= self.bat1.rect.top and self.ball.pos.y >= self.bat1.rect.bottom:
+                self.event = self.EVENT_HIT
+                hit_pos = (self.ball.pos.y
+            else:
+                self.event = self.EVENT_MISS
+        elif self.ball.pos.x >= self.ball_border.right - self.ball_radius:
+            if self.ball.pos.y <= self.bat2.rect.top and self.ball.pos.y >= self.bat2.rect.bottom:
+                self.event = self.EVENT_HIT
+            else:
+                self.event = self.EVENT_MISS
+
+        # More collision checking
+        if (self.ball.pos.y >= self.ball_border.bottom - self.ball_radius) or\
+            (self.ball.pos.y <= self.ball_border.top + self.ball_radius):
+            self.ball.vel.y = -self.ball.vel.y
+            self.event = self.EVENT_WALLBOUNCE
 
