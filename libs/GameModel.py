@@ -52,7 +52,7 @@ class GameModel(object):
 
         # The ball
         starting_vel = random.choice([-1, 1])*width/5.5
-        self.min_vel = starting_vel
+        self.min_vel = abs(starting_vel)
         self.ball = Ball(width//2, height//2, starting_vel, 0)
 
         # The bats
@@ -96,6 +96,11 @@ class GameModel(object):
         # State
         self.state = self.STATE_PREGAME
 
+    def reset_ball(self):
+        starting_vel = random.choice([-1, 1])*self.width/5.5
+        self.ball = Ball(self.width//2, self.height//2, starting_vel, 0)
+
+
     def reset_scores(self):
         self.score1 = 0
         self.score2 = 0
@@ -104,16 +109,17 @@ class GameModel(object):
         hit_pos = -1
         # Check for collision or point
         if self.ball.pos.x <= self.ball_border.left + self.ball_radius:
-            if self.ball.pos.y <= self.bat1.rect.top and self.ball.pos.y >= self.bat1.rect.bottom:
+            if (self.ball.pos.y >= self.bat1.rect.top - self.ball_radius) and\
+                (self.ball.pos.y <= self.bat1.rect.bottom + self.ball_radius):
                 self.event = self.EVENT_HIT
-                hit_pos = (self.ball.pos.y - self.bat1.rect.bottom)/self.bat1.rect.h
-
+                hit_pos = (self.bat1.rect.bottom - self.ball.pos.y)/self.bat1.rect.h
             else:
                 self.event = self.EVENT_MISS
         elif self.ball.pos.x >= self.ball_border.right - self.ball_radius:
-            if self.ball.pos.y <= self.bat2.rect.top and self.ball.pos.y >= self.bat2.rect.bottom:
+            if (self.ball.pos.y >= self.bat2.rect.top - self.ball_radius) and\
+                (self.ball.pos.y <= self.bat2.rect.bottom + self.ball_radius):
                 self.event = self.EVENT_HIT
-                hit_pos = (self.ball.pos.y - self.bat1.rect.bottom)/self.bat1.rect.h
+                hit_pos = (self.bat1.rect.bottom - self.ball.pos.y)/self.bat1.rect.h
             else:
                 self.event = self.EVENT_MISS
 
@@ -141,9 +147,9 @@ class GameModel(object):
         bounce_vel : (vx_new, vy_new)
             The new velocities
         """
-        sf = abs(hit_pos - 0.5)
-        new_speed = 3*sf*2.0*min_vel + min_vel
-        new_angle = (hit_pos - 0.5)*(math.pi/3)
+        sf = abs(hit_pos - 0.5)**2
+        new_speed = 2*sf*2.0*min_vel + min_vel
+        new_angle = 2*(0.5 - hit_pos)*(math.pi/3)
 
         return (new_speed*math.cos(new_angle), new_speed*math.sin(new_angle))
 
@@ -156,7 +162,7 @@ class GameModel(object):
             self.bat1.rect.centery = p1y
             self.bat2.rect.centery = p2y
 
-            # Update the position of the ball
+            # Update the position of the ballGameModel.get_bounce_vel(hit_pos, self.min_vel)
             self.ball.step(dt)
 
             # Check for collision or point
@@ -166,14 +172,26 @@ class GameModel(object):
                 pass
             elif self.event == self.EVENT_HIT:
                 vx, vy = GameModel.get_bounce_vel(hit_pos, self.min_vel)
-                self.ball.vel = pygame.Vector2(vx, vy)
-                print("Player {} hits ball.")
+                print("New speed is {}, {}".format(vx, vy))
+                if self.ball.pos.x > self.width//2:
+                    self.ball.vel = pygame.Vector2(-vx, vy)
+                    self.ball.pos.x = self.ball_border.right - self.ball_radius*1.01
+                    print("Player 2 hits ball at {}.".format(hit_pos))
+                else:
+                    self.ball.vel = pygame.Vector2(vx, vy)
+                    self.ball.pos.x = self.ball_border.left + self.ball_radius*1.05
+                    print("Player 1 hits ball at {}.".format(hit_pos))
+                
             elif self.event == self.EVENT_MISS:
                 self.state = self.STATE_POSTMISS
                 print("Player {} misses ball. Score!")
             elif self.event == self.EVENT_WALLBOUNCE:
                 print("Ball bounces off wall.")
                 self.ball.vel.y = -self.ball.vel.y
+                # if self.ball.pos.y > self.height//2:
+                #     self.ball.pos.y = self.ball_border.bottom - 1
+                # else:
+                #     self.ball.pos.y = self.ball_border.top + 1
         elif self.state == self.STATE_PREGAME:
             pass
         elif self.state == self.STATE_POSTMISS:
@@ -181,7 +199,8 @@ class GameModel(object):
                 self.score1 += 1
             else:
                 self.score2 += 1
-            self.reset_positions()
+            #self.reset_positions()
+            self.reset_ball()
 
             if self.score1 == 11 or self.score2 == 11:
                 self.state = self.STATE_OVER
