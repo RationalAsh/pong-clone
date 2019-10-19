@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 class Ball(object):
     """
@@ -51,6 +52,7 @@ class GameModel(object):
 
         # The ball
         starting_vel = random.choice([-1, 1])*width/5.5
+        self.min_vel = starting_vel
         self.ball = Ball(width//2, height//2, starting_vel, 0)
 
         # The bats
@@ -77,7 +79,7 @@ class GameModel(object):
         self.STATE_OVER = 4
         self.state = self.STATE_PREGAME
 
-    def reset(self):
+    def reset_positions(self):
         # The ball
         starting_vel = random.choice([-1, 1])*self.width/5.5
         self.ball = Ball(self.width//2, self.height//2, starting_vel, 0)
@@ -89,42 +91,103 @@ class GameModel(object):
                         self.height//2, self.bat_length,
                         self.bat_thickness)
 
-        # The scores
-        self.score1 = 0
-        self.score2 = 0
-
         # Event
         self.event = None
         # State
         self.state = self.STATE_PREGAME
 
-    def step(self, p1y, p2y, dt):
-        # Clear event flags
-        self.event = None
+    def reset_scores(self):
+        self.score1 = 0
+        self.score2 = 0
 
-        # Adjust the position of the bats from controller input
-        self.bat1.rect.centery = p1y
-        self.bat2.rect.centery = p2y
-
-        # Update the position of the ball
-        self.ball.step(dt)
-
+    def check_collisions(self):
+        hit_pos = -1
         # Check for collision or point
         if self.ball.pos.x <= self.ball_border.left + self.ball_radius:
             if self.ball.pos.y <= self.bat1.rect.top and self.ball.pos.y >= self.bat1.rect.bottom:
                 self.event = self.EVENT_HIT
-                hit_pos = (self.ball.pos.y
+                hit_pos = (self.ball.pos.y - self.bat1.rect.bottom)/self.bat1.rect.h
+
             else:
                 self.event = self.EVENT_MISS
         elif self.ball.pos.x >= self.ball_border.right - self.ball_radius:
             if self.ball.pos.y <= self.bat2.rect.top and self.ball.pos.y >= self.bat2.rect.bottom:
                 self.event = self.EVENT_HIT
+                hit_pos = (self.ball.pos.y - self.bat1.rect.bottom)/self.bat1.rect.h
             else:
                 self.event = self.EVENT_MISS
 
-        # More collision checking
         if (self.ball.pos.y >= self.ball_border.bottom - self.ball_radius) or\
             (self.ball.pos.y <= self.ball_border.top + self.ball_radius):
-            self.ball.vel.y = -self.ball.vel.y
+            #self.ball.vel.y = -self.ball.vel.y
             self.event = self.EVENT_WALLBOUNCE
+
+        return hit_pos
+
+    @staticmethod
+    def get_bounce_vel(hit_pos, min_vel):
+        """
+        Compute the bounce velocity
+
+        Parameters
+        ----------
+        current_vel : (vx, vy)
+            Current velocity
+        hit_pos : float
+            The place the ball hit the bat (as a percentage of its length)
+
+        Returns
+        -------
+        bounce_vel : (vx_new, vy_new)
+            The new velocities
+        """
+        sf = abs(hit_pos - 0.5)
+        new_speed = 3*sf*2.0*min_vel + min_vel
+        new_angle = (hit_pos - 0.5)*(math.pi/3)
+
+        return (new_speed*math.cos(new_angle), new_speed*math.sin(new_angle))
+
+    def step(self, p1y, p2y, dt):
+        # Clear event flags
+        self.event = None
+
+        if self.state == self.STATE_PLAYING:
+            # Adjust the position of the bats from controller input
+            self.bat1.rect.centery = p1y
+            self.bat2.rect.centery = p2y
+
+            # Update the position of the ball
+            self.ball.step(dt)
+
+            # Check for collision or point
+            hit_pos = self.check_collisions()
+
+            if self.event == None:
+                pass
+            elif self.event == self.EVENT_HIT:
+                vx, vy = GameModel.get_bounce_vel(hit_pos, self.min_vel)
+                self.ball.vel = pygame.Vector2(vx, vy)
+                print("Player {} hits ball.")
+            elif self.event == self.EVENT_MISS:
+                self.state = self.STATE_POSTMISS
+                print("Player {} misses ball. Score!")
+            elif self.event == self.EVENT_WALLBOUNCE:
+                print("Ball bounces off wall.")
+                self.ball.vel.y = -self.ball.vel.y
+        elif self.state == self.STATE_PREGAME:
+            pass
+        elif self.state == self.STATE_POSTMISS:
+            if self.ball.pos.x > self.width//2:
+                self.score1 += 1
+            else:
+                self.score2 += 1
+            self.reset_positions()
+
+            if self.score1 == 11 or self.score2 == 11:
+                self.state = self.STATE_OVER
+            else:
+                self.state = self.STATE_PLAYING
+        elif self.state == self.STATE_OVER:
+            pass
+
 

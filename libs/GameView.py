@@ -42,7 +42,7 @@ class PongView(object):
         
         return pygame.Rect(left, top, width, height)
 
-    def update(self, gameStateDict=None):
+    def update(self, gameModel):
         """
         Update the view with the current game state.
         """
